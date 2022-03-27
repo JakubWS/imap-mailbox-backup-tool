@@ -3,10 +3,11 @@
 Tool for dumping emails from mailboxes to eml files. 
 
 # requirements
-python 3.8
+python - tested on version 3.9.9
 
-libraries:
-- pyyaml 6.0
+##libraries:
+Just run:
+    pip install -r requirements.txt
 
 # instalation
 
