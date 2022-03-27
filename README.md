@@ -5,9 +5,9 @@ Tool for dumping emails from mailboxes to eml files.
 # requirements
 python - tested on version 3.9.9
 
-##libraries:
+## libraries:
 Just run:
-    pip install -r requirements.txt
+```pip install -r requirements.txt```
 
 # instalation
 
