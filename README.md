@@ -43,7 +43,7 @@ mailNotification:
   password: 'P@$$VV0rD'
   port: 587
   subject: "Notification form MailboxBackupTool"
-  to: 'gkonieczko@outlook.com'
+  to: 'ziutek@outlook.com'
   message: 'I would like to inform you that the mailbox copy has been triggered. You will find the logs in the attachment. Do not reply to this message, it was generated automatically.'
   useTLS: True
   ```
