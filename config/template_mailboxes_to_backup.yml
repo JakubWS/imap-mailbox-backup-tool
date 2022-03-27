@@ -1,0 +1,28 @@
+## MAILBOX LIST:
+#
+# office@contoso.com:                   <- mailbox adress
+#     UserFullEmail: true               <- true if you want to use full email address as username, false when just part to the @ character.
+#     password: 'P@ssw0rd'              <- password for account
+#     imapHost: 'imap.contoso.com'      <- imap server address
+#     imapPort: 993                     <- imap server port
+#     imapFolder: 'INBOX, SENT'         <- comma separated imap folders to backup
+#
+# add as many mailboxes as you want to backup. The content of each box will be saved in a separate subfolder (in the process directory) according to the following structure:
+# /{processfolder}/{mailbox-address}/{imap-folder}/{uid__subject__date-time.eml}
+# example:
+# /process/office@contoso.com/inbox/432624572457365__FW: whats up__25-Mar-2022-074825.eml
+
+
+office@contoso.com:
+    UserFullEmail: true
+    password: 'P@ssw0rd'
+    imapHost: 'imap.contoso.com'
+    imapPort: 993
+    imapFolder: 'INBOX, SENT'
+contact@mailbox.com:
+    UserFullEmail: true
+    password: 'P@ssvvOrD'
+    imapHost: 'mail.mailbox.com'
+    imapPort: 993
+    imapFolder: 'INBOX, SENT, DRAFT'
+

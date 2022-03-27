@@ -1,0 +1,47 @@
+common:
+# root folder of the tool
+  rootFolderFullPath: 'c:\mailbox_backup'
+# defines the folder for the log files
+  logsFolderFullPath: 'c:\mailbox_backup\logs'
+# name of the mailboxes list in the yml file.
+  mailboxList: 'mailboxes_to_backup.yml'
+
+
+storage:
+# processFolderFullPath - defines the folder where messages from mailboxes will be downloaded
+  processFolderFullPath: 'c:\mailbox_backup\process'
+
+# outputFolderFullPath - defines the path where ZIP archives will be saved.
+  outputFolderFullPath: 'c:\mailbox_backup\output'
+
+# archiveToZip - True - means that after all emails will be compressed to a zip file (in output folder). In tne "all" scenario this parameter is ignored (always True)
+  archiveToZip: True
+
+# cleanProcessFolder - True means that the 'process' folder will be cleared after each run. This will cause all messages to be downloaded every time.
+  cleanProcessFolder: False
+
+# rolingMethod - method of rolling files in ouput folder. 'DAYS' or 'ITEMS'  
+  rollingMethod: 'items'
+
+# used in rolligMethod: 'DAYS' - cleaning output folder from backups older than defined number of days. 0 - no files will be deleted
+  deleteOlderBackupThanDays: 3
+
+# used in rolligMethod: 'ITEMS' - cleaning output folder from all backups except number of last items. 0 - no files will be deleted                            
+  deleteBackupsItemsToKeep: 3                               
+
+# these parameters are for email notification
+mailNotification:
+  send_notification: True
+
+# parameters of smtp server and notification message  
+  server: 'smtp.contoso.com'
+  user: 'alerts'
+  from: 'alerts@contoso.com'
+  password: 'P@SSW0rd'
+  port: 587
+  subject: "Notification form MailboxBackupTool"
+  to: 'myaddress@contoso.com'
+  message: 'I would like to inform you that the mailbox copy has been triggered. You will find the logs in the attachment. Do not reply to this message, it was generated automatically.'
+  useTLS: True
+
+
