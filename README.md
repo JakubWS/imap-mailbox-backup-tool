@@ -1,6 +1,6 @@
 # imap_backup_tool
 
-Tool for dumping emails from mailboxes to eml files. 
+Tool for dumping incrementally emails from many mailboxes to eml files, and make a backup copies in the zip archives. 
 
 # requirements
 python - tested on version 3.9.9
