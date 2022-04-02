@@ -91,10 +91,12 @@ def save_new_emails_to_eml(host, port, username, password, imap_folder, local_fo
                         subject, encoding = decode_header(msg['subject'])[0] 
                         if encoding != None:
                             subject = subject.decode(encoding)
+                        subject = subject[:20]
                         time_of_email = (msg['date'][5:-6]).replace(" ","-")
                         filename = (message_id + "__" + subject + "__" + time_of_email + ".eml")
                         filename = re.sub(r"[\"/;:<>{}`+,=~]", "", filename)
-                        
+                        filename = re.sub(r"\r\n","__", filename)
+                        filename = re.sub(r"\n","__", filename)
                         
                 if rv != 'OK':
                     log_error("--- ERROR getting message: "+ str(item))
@@ -111,40 +113,6 @@ def save_new_emails_to_eml(host, port, username, password, imap_folder, local_fo
     
     log("saved "+ str(new_message_counter) + " NEW messages")
     
-
-def save_all_emails_to_eml(host, username, password, imap_folder, local_folder):
-    mailbox = imaplib.IMAP4_SSL(host)
-    mailbox.login(username, password)
-    rv, data = mailbox.select(imap_folder)
-    if rv == 'OK':
-        print("Processing mailbox: " + imap_folder)
-        
-        if rv != 'OK':
-            print("No messages found!")
-            return
-        for item in data[0].split():
-            rv, data = mailbox.fetch(item, '(RFC822)')
-            for response_part in data:
-                if isinstance(response_part, tuple):
-                    msg = email.message_from_bytes(response_part[1])
-                    subject = msg['subject']
-                    time_of_email = (msg['date'][5:-6]).replace(" ","-")
-                    filename = re.sub(r"[\"/;:<>{}`+,=~]", "", filename)
-                    filename = re.sub(r"\r\n","__", filename)
-                    filename = re.sub(r"\n","__", filename)
-                    filename = (subject + "__" + time_of_email + ".eml")
-                    print(filename)
-            if rv != 'OK':
-                print ("ERROR getting message: "+ str(item))
-                return
-            print("Writing message: " + filename)
-            file_full_path = os.path.join(local_folder,filename)
-            file = open(file_full_path, 'wb')
-            file.write(data[0][1])
-            file.close()
-    else:
-        print ("ERROR: Unable to open mailbox "+ str(rv))
-
 def archive_backup(source_dir, output_filename):
     relroot = os.path.abspath(os.path.join(source_dir, os.pardir))
     with ZipFile(output_filename, "w") as zip:
