@@ -78,3 +78,36 @@ example of execution:
     cd c:\mailbox_backup\
     python3 .\run_backup.py
 
+# How is it working
+
+Messages are saved to eml files. A subfolder is created for each mailbox in the process folder. In the mailbox folder, subfolders are created in which messages for imap folders (inbox, sent, etc) are saved.
+Message files are named according to the following convention:
+
+    {segment1}__{segment2}__{segment3}.eml
+
+* segment1 - md5 checksum calculated from the message-id field of the message,
+* segment2 - first 20 characters of message subject,
+* segment3 - time of message.
+
+if segment 3 contains one of the following characters:
+
+    \ "/ ;: <> {}` +, = ~? * |
+
+it is removed. This is because file names cannot contain these characters.
+
+example:
+
+    ec77f17c4c402d3a0a3877559cee51a6__Re M3 Forecast__28-Mar-2022-183517.eml
+
+
+Before saving the message, it is checked whether such message is already in the folder. If present, it is skipped. This way, all messages are downloaded the first time, and only new messages the next time. The check is only a matter of fetching the Message-id and Date headers, so it's a quick method.
+
+If the archiveToZip parameter is set to True, after the message download is completed, a ZIP archive containing all messages for all defined mailboxes is created and saved to the folder defined in the outputFolderFullPath parameter.
+
+If the cleanProcessFolder parameter is set to True - after each run and archiving to ZIP, all messages will be deleted from the process folder.
+
+The parameters ollingMethod, deleteOlderBackupThanDays, deleteBackupsItemsToKeep are responsible for the method of rolling zip files in the output folder. The DAYS method allows you to define how many last days the files are to be stored. The ITEMS method allows us to define how many files we want to store quantitatively. The methods cannot be combined. The oldest files are deleted.
+
+The parameters ollingMethod, deleteOlderBackupThanDays, deleteBackupsItemsToKeep are responsible for the method of rolling zip files in the output folder. The DAYS method allows you to define how many last days the files are to be stored. The ITEMS method allows us to define how many files we want to store quantitatively. The methods cannot be combined. The oldest files are deleted.
+
+After each run, you can get a message containing a log of the operation progress. The entire mailNotification section is responsible for this.

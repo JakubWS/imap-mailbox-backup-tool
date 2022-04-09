@@ -1,5 +1,7 @@
 
-import imaplib, datetime, time, re, requests, yaml, os, email, glob, shutil, mailbox, smtplib, ssl
+from __future__ import unicode_literals
+from encodings import utf_8
+import imaplib, datetime, time, re, requests, yaml, os, email, glob, shutil, mailbox, smtplib, ssl, hashlib
 from zipfile import ZipFile
 from email.header import decode_header
 from os.path import exists as file_exists
@@ -65,54 +67,84 @@ def save_new_emails_to_eml(host, port, username, password, imap_folder, local_fo
     mailbox.login(username, password)
     mailbox.select(imap_folder, readonly=True)
     rv, data = mailbox.search(None, "(ALL)")
-    log("-- Processing mailbox: " + imap_folder +", found "+str(len(data[0].split()))+" messages")
+    how_many = len(data[0].split())
+    log("-- Processing mailbox: " + imap_folder +", found "+str(how_many)+" messages")
     new_message_counter = 0
     if rv == 'OK':
-    
+        message_counter = 0
         for item in data[0].split():
-            rv, data = mailbox.fetch(item,'(BODY[HEADER.FIELDS (MESSAGE-ID)])')
+            message_counter = message_counter + 1   
+            empty = False
+            
+            saved_counter = 0
+            rv, data = mailbox.fetch(item,'(BODY[HEADER.FIELDS (MESSAGE-ID DATE)])')
             for response_part in data:
+                
                 if isinstance(response_part, tuple):
                     msg = email.message_from_bytes(response_part[1])
-                    message_id = ((msg['message-id']).split("@")[0])[1:]
+                    if (msg['message-id']) == None:
+                        message_id = msg['DATE']
+                        message_id = hashlib.md5(str(message_id).encode())
+                        file_id = str(message_id.hexdigest())
+                        empty = False
+                    else:
+                        message_id = (((str(msg['message-id'])).split("@")[0])[1:])
+                        message_id = hashlib.md5(str(message_id).encode())
+                        file_id = str(message_id.hexdigest())
+                        empty = False
+                 
+            if empty == False:
+                pattern = str(os.path.join(local_folder,file_id)) + "*.eml"  
+                if glob.glob(pattern):
+                    for file in glob.glob(pattern):
+                        existing_file_path = os.path.basename(file)
+                        log("----["+str(message_counter)+"/"+str(how_many)+"]  found existing message "+ existing_file_path + ". Skipping...")
+                else:          
+                    
+                    rv, data = mailbox.fetch(item, '(RFC822)')
+                    for response_part in data:
+                        saved_counter = saved_counter +1
+                        if isinstance(response_part, tuple):
+                            msg = email.message_from_bytes(response_part[1])
+                            if not msg['subject']:
+                                msg['subject'] = '[No Subject]'
+                                
+                            subject, encoding = (decode_header(msg['subject'])[0])
+                            print(str(encoding))
+                            if encoding == None or encoding == 'unknown-8bit':
+                                subject = str(subject[:20]).replace('\\','')
+                            else:
+                                subject = str(subject).encode(encoding)
+                                subject = (str(subject)[:20]).replace('\\','')
+        
+                            if not msg['date']:
+                                msg['date'] = '[no date]'
+                                
+                            time_of_email = (msg['date'][5:-6]).replace(" ","-")
+                            file_id = str(message_id.hexdigest())
+                            filename = (file_id+"__" + str(subject) + "__" + time_of_email + ".eml")
+                            filename = re.sub(r"[\"/;:<>{}`+,=~?*|]", "", filename)
+                            filename = re.sub(r"\r\n","__", filename)
+                            filename = re.sub(r"\n","__", filename)
+                            
+                    if rv != 'OK':
+                        log_error("--- ERROR getting message: "+ str(item))
+                        return
+                    new_message_counter = new_message_counter + 1
+                    log("----["+str(message_counter)+"/"+str(how_many)+"] --- saving message in file: " + filename)
+                    file_full_path = os.path.join(local_folder,filename)
+                    file = open(file_full_path, 'wb')
+                    file.write(data[0][1])
+                    file.close()
+            else:
+                log("found broken message -- skipping")
             
-            pattern = str(os.path.join(local_folder,message_id)) + "*.eml"
-            new_message_counter = 0        
-            if glob.glob(pattern):
-                for file in glob.glob(pattern):
-                    existing_file_path = os.path.basename(file)
-                log("---- found existing message "+ existing_file_path + ". Skipping...")
-            else:          
-                
-                rv, data = mailbox.fetch(item, '(RFC822)')
-                for response_part in data:
-                    if isinstance(response_part, tuple):
-                        msg = email.message_from_bytes(response_part[1])
-                        subject, encoding = decode_header(msg['subject'])[0] 
-                        if encoding != None:
-                            subject = subject.decode(encoding)
-                        subject = subject[:20]
-                        time_of_email = (msg['date'][5:-6]).replace(" ","-")
-                        filename = (message_id + "__" + subject + "__" + time_of_email + ".eml")
-                        filename = re.sub(r"[\"/;:<>{}`+,=~]", "", filename)
-                        filename = re.sub(r"\r\n","__", filename)
-                        filename = re.sub(r"\n","__", filename)
-                        
-                if rv != 'OK':
-                    log_error("--- ERROR getting message: "+ str(item))
-                    return
-                new_message_counter = new_message_counter + 1
-                log("------ saving message in file: " + filename)
-                file_full_path = os.path.join(local_folder,filename)
-                file = open(file_full_path, 'wb')
-                file.write(data[0][1])
-                file.close()
     else:
         log("ERROR: Unable to open mailbox "+ str(rv))
+    
     log("closing "+ username +" mailbox.")
-    
-    log("saved "+ str(new_message_counter) + " NEW messages")
-    
+    log("saved "+str(new_message_counter)+" new messages")
+        
 def archive_backup(source_dir, output_filename):
     relroot = os.path.abspath(os.path.join(source_dir, os.pardir))
     with ZipFile(output_filename, "w") as zip:
