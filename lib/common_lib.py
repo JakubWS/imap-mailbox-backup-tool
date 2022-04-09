@@ -110,7 +110,7 @@ def save_new_emails_to_eml(host, port, username, password, imap_folder, local_fo
                                 msg['subject'] = '[No Subject]'
                                 
                             subject, encoding = (decode_header(msg['subject'])[0])
-                            print(str(encoding))
+                            
                             if encoding == None or encoding == 'unknown-8bit':
                                 subject = str(subject[:20]).replace('\\','')
                             else:
